@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
@@ -37,9 +38,12 @@ func main() {
 		log.Fatal("Error connecting to the database:", err)
 	}
 
+	db := database.New(conn)
 	apiCfg := apiConfig{
-		DB: database.New(conn),
+		DB: db,
 	}
+
+	go startScraping(db, 10, time.Minute)
 
 	router := chi.NewRouter()
 
@@ -61,6 +65,8 @@ func main() {
 	v1Router.Get("/courses", apiCfg.handlerGetCourses)
 	v1Router.Post("/courses-enrolled", apiCfg.middlewareAuth(apiCfg.handlerCreateCourseEnrolled))
 	v1Router.Get("/courses-enrolled", apiCfg.middlewareAuth(apiCfg.handlerGetCoursesEnrolled))
+	v1Router.Delete("/courses-enrolled/{courseID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteCourseEnrolled))
+	v1Router.Get("/courses-enrolled/{courseID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteCourseEnrolled))
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{

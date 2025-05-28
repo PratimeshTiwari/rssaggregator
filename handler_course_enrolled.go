@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/pratimeshtiwari/rssaggregator/internal/database"
 )
@@ -43,9 +44,27 @@ func (apiCfg *apiConfig) handlerGetCoursesEnrolled(w http.ResponseWriter, r *htt
 	coursesEnrolled, err := apiCfg.DB.GetCoursesEnrolled(r.Context(), user.ID)
 
 	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("Error enroll to course failed: %v", err))
+		respondWithError(w, 400, fmt.Sprintf("Error couldn't get courses enrolled: %v", err))
 		return
 	}
 
 	respondWithJSON(w, 201, databaseCoursesEnrolledToCoursesEnrolled(coursesEnrolled))
+}
+
+func (apiCfg *apiConfig) handlerDeleteCourseEnrolled(w http.ResponseWriter, r *http.Request, user database.User) {
+	courseIDStr := chi.URLParam(r, "courseID")
+	courseID, err := uuid.Parse(courseIDStr)
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Invalid course ID: %v", err))
+		return
+	}
+	err = apiCfg.DB.DeleteCoursesEnrolled(r.Context(), database.DeleteCoursesEnrolledParams{
+		ID:     courseID,
+		UserID: user.ID,
+	})
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Error deleting course enrolled: %v", err))
+		return
+	}
+	respondWithJSON(w, 200, struct{}{})
 }

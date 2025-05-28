@@ -6,3 +6,14 @@ RETURNING *;
 -- name: GetCourses :many 
 SELECT * FROM courses;
 
+-- name: GetNextCoursesToFetch :many
+SELECT * FROM courses
+ORDER BY last_fetched_at ASC NULLS FIRST 
+LIMIT $1;
+
+-- name: MarkCourseAsFetched :one
+UPDATE courses
+SET last_fetched_at = NOW(),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;  

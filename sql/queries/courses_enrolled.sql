@@ -6,3 +6,5 @@ RETURNING *;
 -- name: GetCoursesEnrolled :many 
 SELECT * FROM courses_enrolled WHERE user_id = $1;
 
+-- name: DeleteCoursesEnrolled :exec
+DELETE FROM courses_enrolled WHERE id = $1 AND user_id = $2;

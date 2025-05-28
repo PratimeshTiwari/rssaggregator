@@ -45,6 +45,20 @@ func (q *Queries) CreateCoursesEnrolled(ctx context.Context, arg CreateCoursesEn
 	return i, err
 }
 
+const deleteCoursesEnrolled = `-- name: DeleteCoursesEnrolled :exec
+DELETE FROM courses_enrolled WHERE id = $1 AND user_id = $2
+`
+
+type DeleteCoursesEnrolledParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) DeleteCoursesEnrolled(ctx context.Context, arg DeleteCoursesEnrolledParams) error {
+	_, err := q.db.ExecContext(ctx, deleteCoursesEnrolled, arg.ID, arg.UserID)
+	return err
+}
+
 const getCoursesEnrolled = `-- name: GetCoursesEnrolled :many
 SELECT id, created_at, updated_at, user_id, course_id FROM courses_enrolled WHERE user_id = $1
 `

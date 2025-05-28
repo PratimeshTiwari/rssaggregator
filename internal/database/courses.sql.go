@@ -15,7 +15,7 @@ import (
 const createCourse = `-- name: CreateCourse :one
 INSERT INTO courses (id, created_at, updated_at,name,url,user_id)
 VALUES ($1,$2,$3,$4,$5,$6)
-RETURNING id, created_at, updated_at, name, url, user_id
+RETURNING id, created_at, updated_at, name, url, user_id, last_fetched_at
 `
 
 type CreateCourseParams struct {
@@ -44,12 +44,13 @@ func (q *Queries) CreateCourse(ctx context.Context, arg CreateCourseParams) (Cou
 		&i.Name,
 		&i.Url,
 		&i.UserID,
+		&i.LastFetchedAt,
 	)
 	return i, err
 }
 
 const getCourses = `-- name: GetCourses :many
-SELECT id, created_at, updated_at, name, url, user_id FROM courses
+SELECT id, created_at, updated_at, name, url, user_id, last_fetched_at FROM courses
 `
 
 func (q *Queries) GetCourses(ctx context.Context) ([]Course, error) {
@@ -68,6 +69,7 @@ func (q *Queries) GetCourses(ctx context.Context) ([]Course, error) {
 			&i.Name,
 			&i.Url,
 			&i.UserID,
+			&i.LastFetchedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -80,4 +82,64 @@ func (q *Queries) GetCourses(ctx context.Context) ([]Course, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getNextCoursesToFetch = `-- name: GetNextCoursesToFetch :many
+SELECT id, created_at, updated_at, name, url, user_id, last_fetched_at FROM courses
+ORDER BY last_fetched_at ASC NULLS FIRST 
+LIMIT $1
+`
+
+func (q *Queries) GetNextCoursesToFetch(ctx context.Context, limit int32) ([]Course, error) {
+	rows, err := q.db.QueryContext(ctx, getNextCoursesToFetch, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Course
+	for rows.Next() {
+		var i Course
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+			&i.Url,
+			&i.UserID,
+			&i.LastFetchedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const markCourseAsFetched = `-- name: MarkCourseAsFetched :one
+UPDATE courses
+SET last_fetched_at = NOW(),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, created_at, updated_at, name, url, user_id, last_fetched_at
+`
+
+func (q *Queries) MarkCourseAsFetched(ctx context.Context, id uuid.UUID) (Course, error) {
+	row := q.db.QueryRowContext(ctx, markCourseAsFetched, id)
+	var i Course
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Url,
+		&i.UserID,
+		&i.LastFetchedAt,
+	)
+	return i, err
 }
