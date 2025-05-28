@@ -19,7 +19,7 @@ type apiConfig struct {
 }
 
 func main() {
-	fmt.Println("Hello, World!")
+	fmt.Println("Admission Portal !! ")
 	godotenv.Load(".env")
 
 	portString := os.Getenv("PORT")
@@ -56,6 +56,11 @@ func main() {
 	v1Router.Get("/ready", handlerReadiness)
 	v1Router.Get("/error", handlerErr)
 	v1Router.Post("/users", apiCfg.handlerCreateUser)
+	v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+	v1Router.Post("/courses", apiCfg.middlewareAuth(apiCfg.handlerCreateCourse))
+	v1Router.Get("/courses", apiCfg.handlerGetCourses)
+	v1Router.Post("/courses-enrolled", apiCfg.middlewareAuth(apiCfg.handlerCreateCourseEnrolled))
+	v1Router.Get("/courses-enrolled", apiCfg.middlewareAuth(apiCfg.handlerGetCoursesEnrolled))
 	router.Mount("/v1", v1Router)
 
 	srv := &http.Server{

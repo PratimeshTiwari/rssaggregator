@@ -10,9 +10,10 @@ import (
 	"github.com/pratimeshtiwari/rssaggregator/internal/database"
 )
 
-func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerCreateCourse(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
 		Name string `json:"name"`
+		Url  string `json:"url"`
 	}
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -22,11 +23,13 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
+	course, err := apiCfg.DB.CreateCourse(r.Context(), database.CreateCourseParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Name:      params.Name,
+		Url:       params.Url,
+		UserID:    user.ID,
 	})
 
 	if err != nil {
@@ -34,10 +37,16 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	respondWithJSON(w, 201, databaseUserToUser(user))
+	respondWithJSON(w, 201, databaseCourseToCourse(course))
 }
 
-func (apiCfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *apiConfig) handlerGetCourses(w http.ResponseWriter, r *http.Request) {
 
-	respondWithJSON(w, http.StatusOK, databaseUserToUser(user))
+	course, err := apiCfg.DB.GetCourses(r.Context())
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Error creating user: %v", err))
+		return
+	}
+
+	respondWithJSON(w, 201, databaseCoursesToCourses(course))
 }
