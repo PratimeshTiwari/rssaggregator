@@ -1,0 +1,19 @@
+Notes : 
+--------
+
+->go mod vendor : stores locally 
+->routers : how app reacts to url/http methods (route mapping , request handling , modularity)
+->cors : mechanism backend uses to tell the browser that it is okay to make requests to the server from a different origin
+->middleware : functions that intercept requests and responses, allowing you to modify them or perform actions before they reach the final handler
+->context : allows you to pass request-scoped values, deadlines, and cancellation signals across API boundaries
+->models : defines the structure of data used in the application, such as database models or data transfer objects
+->controllers : contains the logic for handling requests and responses, often interacting with models and services
+->services : contains business logic and interacts with models, often used to encapsulate complex operations
+->config : contains configuration settings for the application, such as database connections, API keys, and other environment-specific settings
+->utils : contains utility functions that can be reused across the application, such as logging, error handling, or data formatting
+->migrations : contains database migration scripts, which are used to create or modify database schemas
+->docs : contains API documentation, often generated from code comments or annotations
+->vendor : contains third-party dependencies that are vendored into the project, allowing for reproducible builds and avoiding external dependency issues
+
+->.env : contains environment variables used by the application, such as database connection strings, API keys, and other sensitive information
+->.gitignore : specifies files and directories that should be ignored by Git, such as build artifacts, temporary files, and sensitive information
